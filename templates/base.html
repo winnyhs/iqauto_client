@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title if title else "Flask App" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="topnav">
+    <a class="navbtn {{ 'active' if active_tab=='diagnosis' else '' }}" href="/diagnosis">진단</a>
+    <a class="navbtn {{ 'active' if active_tab=='results' else '' }}" href="/results">진단 결과</a>
+    <a class="navbtn {{ 'active' if active_tab=='client' else '' }}" href="/client">고객 정보</a>
+  </nav>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

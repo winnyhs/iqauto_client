@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set active_tab = "client" %}
+{% block content %}
+
+<div class="row">
+  <button id="btnNewClient" class="btn primary">+ 새 client 등록</button>
+</div>
+
+<div class="row">
+  <label class="label">기존 client 선택</label>
+  <!-- size=15 로 15명까지 한번에 보이고, 그 이상은 스크롤 -->
+  <select id="clientSelect" class="select" size="15"></select>
+</div>
+
+<div id="clientDetail" class="card hidden">
+  <div id="selectedMsg" class="blink-blue">이 고객을 진단대상자로 지정했습니다</div>
+
+  <div class="kv">
+    <div><span class="k">이름</span><span class="v" id="c_name"></span></div>
+    <div><span class="k">생년월일</span><span class="v" id="c_birth"></span></div>
+    <div><span class="k">성별</span><span class="v" id="c_sex"></span></div>
+    <div><span class="k">체중</span><span class="v" id="c_weight"></span></div>
+    <div><span class="k">키</span><span class="v" id="c_height"></span></div>
+  </div>
+
+  <div class="tests">
+    <div class="label">test (클릭 시 해당 날짜 결과 요청)</div>
+    <ul id="testList" class="testlist"></ul>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.PAGE = "client";
+</script>
+{% endblock %}
