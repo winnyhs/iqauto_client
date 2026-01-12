@@ -88,7 +88,22 @@ def results_page():
 @app.get("/api/clients")
 def api_clients():
     db = _read_db()
-    return jsonify({"names": _sorted_names(db)})
+    names = _sorted_names(db)
+
+    # 리스트 UI에서 생년월일/성별을 같이 보여주기 위한 요약 정보
+    clients = []
+    for n in names:
+        c = _find_client(db, n)
+        if not c:
+            continue
+        clients.append({
+            "name": c.get("name", ""),
+            "birth_date": c.get("birth_date", ""),
+            "sex": c.get("sex", "")
+        })
+
+    return jsonify({"names": names, "clients": clients})
+
 
 
 @app.get("/api/client/<name>")
@@ -117,11 +132,31 @@ def api_create_client():
         "sex": (data.get("sex") or "").strip(),
         "weight": (data.get("weight") or "").strip(),
         "height": (data.get("height") or "").strip(),
+        "surgery_history": (data.get("surgery_history") or "").strip(),
+        "medications": (data.get("medications") or "").strip(),
         "tests": data.get("tests") or []
     }
+
     db.setdefault("clients", []).append(new_client)
     _write_db(db)
     return jsonify({"ok": True, "client": new_client}), 201
+
+
+
+@app.delete("/api/client/<name>")
+def api_delete_client(name: str):
+    db = _read_db()
+    clients = db.get("clients", [])
+    before = len(clients)
+
+    clients = [c for c in clients if c.get("name") != name]
+    if len(clients) == before:
+        abort(404, "client not found")
+
+    db["clients"] = clients
+    _write_db(db)
+    return jsonify({"ok": True})
+
 
 
 @app.get("/api/result")

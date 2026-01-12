@@ -1,32 +1,339 @@
-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; background:#f7f7fb; }
-.container { padding: 16px; max-width: 980px; margin: 0 auto; }
-
-.topnav { display:flex; gap:8px; padding: 10px 12px; background:#111827; position:sticky; top:0; }
-.navbtn { color:#cbd5e1; text-decoration:none; padding:8px 12px; border-radius:10px; }
-.navbtn.active { background:#1f2937; color:#fff; }
-
-.row { margin: 12px 0; }
-.label { display:block; font-weight:600; margin-bottom:8px; }
-.select { width: 320px; max-width: 100%; }
-
-.btn { padding:10px 12px; border:none; border-radius:10px; cursor:pointer; }
-.btn.primary { background:#2563eb; color:white; }
-
-.card { background:white; border-radius:14px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,0.06); margin: 12px 0; }
-.hidden { display:none; }
-.muted { color:#6b7280; }
-
-.kv .k { display:inline-block; width: 90px; color:#374151; font-weight:600; }
-.kv .v { color:#111827; }
-
-.testlist { list-style:none; padding-left:0; margin: 8px 0 0 0; }
-.testlist li { padding:8px 10px; border-radius:10px; background:#f3f4f6; margin-bottom:8px; }
-.testlist li button { background:transparent; border:none; color:#111827; cursor:pointer; text-decoration:underline; }
-
-.blink-blue {
-  color: #2563eb;
-  font-weight: 700;
-  margin-bottom: 10px;
-  animation: blinker 1s linear infinite;
-}
-@keyframes blinker { 50% { opacity: 0; } }
+/* =========================================================
+   Base
+   ========================================================= */
+   :root{
+    --bg: #f7f7fb;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+  
+    --nav-bg: #111827;
+    --nav-active: #1f2937;
+  
+    --primary: #2563eb;
+    --shadow: 0 6px 20px rgba(0,0,0,0.06);
+  
+    --r-lg: 14px;
+    --r-md: 12px;
+    --r-sm: 10px;
+  
+    /* client list: 15 rows scrolling rule */
+    --client-row-h: 44px; /* 한 줄 높이(=row height) */
+    --client-visible-rows: 8;
+  
+    /* topnav 높이 + 여백(환경에 따라 56~90px 사이) */
+    --topnav-offset: 90px;
+  }
+  
+  *{ box-sizing:border-box; }
+  html, body{ height:100%; }
+  
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+  }
+  
+  /* =========================================================
+     Layout / Common UI
+     ========================================================= */
+  .container{
+    padding:16px;
+    max-width:980px;
+    margin:0 auto;
+  }
+  
+  .topnav{
+    display:flex;
+    gap:8px;
+    padding:10px 12px;
+    background: var(--nav-bg);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  
+  .navbtn{
+    color:#cbd5e1;
+    text-decoration:none;
+    padding:8px 12px;
+    border-radius: var(--r-sm);
+  }
+  .navbtn.active{
+    background: var(--nav-active);
+    color:#fff;
+  }
+  
+  .row{ margin:12px 0; }
+  .label{ display:block; font-weight:600; margin-bottom:8px; }
+  
+  .hidden{ display:none !important; }
+  .muted{ color: var(--muted); }
+  
+  .btn{
+    padding:10px 12px;
+    border:none;
+    border-radius: var(--r-sm);
+    cursor:pointer;
+  }
+  .btn.primary{
+    background: var(--primary);
+    color:#fff;
+  }
+  
+  .card{
+    background:#fff;
+    border-radius: var(--r-lg);
+    padding:14px;
+    box-shadow: var(--shadow);
+    margin:12px 0;
+  }
+  
+  .input,
+  select.input,
+  textarea.input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius: var(--r-sm);
+    outline:none;
+    background:#fff;
+  }
+  
+  /* legacy select */
+  .select{ width:320px; max-width:100%; }
+  
+  /* Detail key/value */
+  .kv .k{
+    display:inline-block;
+    width:90px;
+    color:#374151;
+    font-weight:600;
+  }
+  .kv .v{ color: var(--text); }
+  
+  /* Test list */
+  .testlist{
+    list-style:none;
+    padding-left:0;
+    margin:8px 0 0 0;
+  }
+  .testlist li{
+    padding:8px 10px;
+    border-radius: var(--r-sm);
+    background:#f3f4f6;
+    margin-bottom:8px;
+  }
+  .testlist li button{
+    background:transparent;
+    border:none;
+    color: var(--text);
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  
+  /* Blink message */
+  .blink-blue{
+    color: var(--primary);
+    font-weight:700;
+    margin-bottom:10px;
+    animation: blinker 1s linear infinite;
+  }
+  @keyframes blinker{ 50%{ opacity:0; } }
+  
+  /* =========================================================
+     Client Page (2-column)
+     ========================================================= */
+  .client-page{
+    display:flex;
+    gap:16px;
+    align-items:stretch;
+    height: calc(100dvh - var(--topnav-offset));
+    min-height: 0;
+  }
+  
+  .client-left{
+    flex: 0 0 300px;
+    min-width: 200px;
+  
+    display:flex;
+    flex-direction:column;
+  
+    min-height:0;
+    overflow:hidden;
+  }
+  
+  .client-right{
+    flex: 1 1 520px;
+    min-width: 260px;
+  
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+  
+    min-height:0;
+  }
+  
+  /* =========================================================
+     Client list (15 rows rule)
+     ========================================================= */
+  .client-list{
+    /* 핵심: 15개까지만 보이고, 넘으면 스크롤 */
+    max-height: calc(var(--client-row-h) * var(--client-visible-rows) + 12px);
+    overflow-y: auto;
+  
+    border:1px solid var(--border);
+    border-radius: var(--r-md);
+    background:#fff;
+    padding:6px;
+  
+    scrollbar-gutter: stable;
+  }
+  
+  /* “처음부터 스크롤바가 나타나도록” (옵션) */
+  .client-list.scroll-always{
+    overflow-y: scroll;
+  }
+  
+  /* Row */
+  .client-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  
+    padding:10px 10px;
+    border-radius: var(--r-sm);
+    cursor:pointer;
+  
+    /* 15 rows 계산이 항상 정확해지도록 row 높이 고정 */
+    height: var(--client-row-h);
+  }
+  
+  .client-item:hover{ background:#f3f4f6; }
+  .client-item.active{ background:#e0e7ff; }
+  
+  /* name + meta in one line */
+  .client-main{
+    flex: 1 1 auto;
+    min-width:0;
+  
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+  }
+  
+  .client-name{
+    font-weight:700;
+    color: var(--text);
+  
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  
+  .client-meta{
+    color: var(--muted);
+    font-size:12px;
+    white-space:nowrap;
+    flex: 0 0 auto;
+  }
+  
+  /* delete X */
+  .client-del{
+    flex:0 0 auto;
+    width:28px;
+    height:28px;
+    border:none;
+    border-radius: 8px;
+    background:#ffffff;
+    color:#991b1b;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .client-del:hover{ filter:brightness(0.98); }
+  
+  /* detail card width control */
+  #clientDetail.card{
+    width:100%;
+    max-width: 520px;
+  }
+  
+  /* Narrow: keep 2-column but tighter */
+  @media (max-width: 860px){
+    .client-left{ flex: 0 0 240px; min-width: 220px; }
+    .client-right{ min-width: 220px; }
+    #clientDetail.card{ max-width: 100%; }
+  }
+  
+  /* =========================================================
+     Modal
+     ========================================================= */
+  .modal{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+  }
+  
+  .modal-backdrop{
+    position:absolute;
+    inset:0;
+    background: rgba(0,0,0,0.45);
+  }
+  
+  .modal-panel{
+    position:relative;
+    width: min(720px, calc(100vw - 24px));
+    margin:48px auto;
+    background:#fff;
+    border-radius:16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    overflow:hidden;
+  }
+  
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .modal-title{ font-weight:800; }
+  
+  .modal-x{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:10px;
+    background:#f3f4f6;
+    cursor:pointer;
+    font-size:20px;
+    line-height:1;
+  }
+  
+  .modal-body{ padding:14px 16px; }
+  
+  .form-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+  .fg{ display:flex; flex-direction:column; gap:6px; }
+  .fg-full{ grid-column: 1 / -1; }
+  .fg-label{ font-size:12px; color: var(--muted); }
+  
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:14px;
+  }
+  
+  @media (max-width: 640px){
+    .form-grid{ grid-template-columns: 1fr; }
+    .modal-panel{ margin:18px auto; }
+  }
+  

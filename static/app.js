@@ -15,67 +15,205 @@ function getSelectedClientName() {
 }
 
 // --- Client page ---
+
 async function initClientPage() {
-  const select = document.getElementById("clientSelect");
+  const listEl = document.getElementById("clientList");
   const detail = document.getElementById("clientDetail");
+  const noHint = document.getElementById("noSelectionHint");
   const testList = document.getElementById("testList");
 
   const btnNew = document.getElementById("btnNewClient");
-  btnNew.addEventListener("click", async () => {
-    // 간단 데모: prompt로 받기 (원하면 모달/폼으로 교체)
-    const name = (prompt("새 client 이름을 입력하세요") || "").trim();
+  btnNew.addEventListener("click", () => openNewClientModal());
+
+  await loadAndRenderClientList();
+
+  // 이전 선택 복원
+  const saved = getSelectedClientName();
+  if (saved) await selectClient(saved);
+
+  // --- New Client Modal ---
+  const modal = document.getElementById("newClientModal");
+  const backdrop = document.getElementById("newClientBackdrop");
+  const btnClose = document.getElementById("btnCloseNewClient");
+  const btnCancel = document.getElementById("btnCancelNewClient");
+  const form = document.getElementById("newClientForm");
+
+  function openNewClientModal(){
+    form.reset();
+  
+    // 생일 달력 기본 연도를 1960로 “유도” (대부분의 브라우저에서 1960로 열림)
+    const birth = document.getElementById("m_birth_date");
+    if (birth && !birth.value) birth.value = "1960-01-01";
+  
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => document.getElementById("m_name")?.focus(), 0);
+  }
+  
+
+  function closeNewClientModal(){
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  backdrop.addEventListener("click", closeNewClientModal);
+  btnClose.addEventListener("click", closeNewClientModal);
+  btnCancel.addEventListener("click", closeNewClientModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.classList.contains("hidden")) closeNewClientModal();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = (document.getElementById("m_name").value || "").trim();
     if (!name) return;
 
-    const birth_date = (prompt("birth_date (YYYY-MM-DD) 예: 2010-01-01") || "").trim();
-    const sex = (prompt("sex 예: female") || "").trim();
-    const weight = (prompt("weight 예: 57kg") || "").trim();
-    const height = (prompt("height 예: 167cm") || "").trim();
+    const payload = {
+      name,
+      birth_date: (document.getElementById("m_birth_date").value || "").trim(),
+      sex: (document.getElementById("m_sex").value || "").trim(),
+      height: (document.getElementById("m_height").value || "").trim(),
+      weight: (document.getElementById("m_weight").value || "").trim(),
+      surgery_history: (document.getElementById("m_surgery_history").value || "").trim(),
+      medications: (document.getElementById("m_medications").value || "").trim(),
+      tests: []
+    };
 
-    const payload = { name, birth_date, sex, weight, height, tests: [] };
     const r = await fetch("/api/client", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+
     if (!r.ok) {
       alert("등록 실패: " + await r.text());
       return;
     }
-    await loadClientNames(select);
-  });
 
-  await loadClientNames(select);
+    closeNewClientModal();
 
-  // 이전 선택 복원
-  const saved = getSelectedClientName();
-  if (saved) {
-    for (const opt of select.options) {
-      if (opt.value === saved) {
-        opt.selected = true;
-        await renderClientDetail(saved);
-        detail.classList.remove("hidden");
-        break;
-      }
-    }
-  }
-
-  select.addEventListener("change", async () => {
-    const name = select.value;
-    if (!name) return;
-
+    // 목록 갱신 + 새 고객 자동 선택
+    console.log("--- select", name)
+    // selected 값을 저장 (리스트 active 표시가 맞게 나옴)
     setSelectedClientName(name);
+    // 리스트 즉시 갱신 (새 고객이 바로 나타남)
+    await loadAndRenderClientList();
+    // 방금 등록한 고객을 실제로 선택 + 오른쪽 상세 표시
     await renderClientDetail(name);
     detail.classList.remove("hidden");
-  });
 
-  async function loadClientNames(selectEl) {
-    const data = await apiGet("/api/clients");
-    selectEl.innerHTML = "";
-    (data.names || []).forEach(n => {
-      const opt = document.createElement("option");
-      opt.value = n;
-      opt.textContent = n;
-      selectEl.appendChild(opt);
+    // 선택된 항목이 화면에 보이도록 스크롤
+    const activeEl = listEl.querySelector(`.client-item[data-name="${CSS.escape(name)}"]`);
+    activeEl?.scrollIntoView({ block: "nearest" });
+  });
+  
+  async function loadAndRenderClientList() {
+    const data = await apiGet("/api/clients"); // { names, clients }
+    const clients = data.clients || (data.names || []).map(n => ({ name: n, birth_date: "", sex: "" }));
+
+    listEl.innerHTML = "";
+    clients.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "client-item";
+      row.dataset.name = c.name;
+
+      // const left = document.createElement("div");
+      // left.className = "client-leftinfo";
+
+      const main = document.createElement("div");
+      main.className = "client-main";
+
+      const nm = document.createElement("div");
+      nm.className = "client-name";
+      nm.textContent = c.name || "";
+
+      const meta = document.createElement("div");
+      meta.className = "client-meta";
+
+      const bd = (c.birth_date || "").trim();
+      const sx = (c.sex || "").trim();
+      meta.textContent = [bd, sx].filter(Boolean).join(" / "); // ✅ 이름 오른쪽에 생일/성별
+
+      main.appendChild(nm);
+      main.appendChild(meta);
+
+      const del = document.createElement("button");
+      del.className = "client-del";
+      del.type = "button";
+      del.textContent = "×"; // ✅ X 표시
+      del.title = "삭제";
+      del.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm(`정말로 '${c.name}' 고객을 삭제할까요?`)) return;
+
+        const r = await fetch(`/api/client/${encodeURIComponent(c.name)}`, { method: "DELETE" });
+        if (!r.ok) {
+          alert("삭제 실패: " + await r.text());
+          return;
+        }
+
+        if (getSelectedClientName() === c.name) {
+          setSelectedClientName("");
+          detail.classList.add("hidden");
+          noHint.classList.remove("hidden");
+        }
+        await loadAndRenderClientList();
+      });
+
+      row.appendChild(main);
+      row.appendChild(del);
+
+      row.addEventListener("click", async () => {
+        await selectClient(c.name);
+      });
+
+      listEl.appendChild(row);
+    });
+
+    updateActiveRow(getSelectedClientName());
+    
+    const activeEl = listEl.querySelector(`.client-item[data-name="${CSS.escape(name)}"]`);
+    activeEl?.scrollIntoView({ block: "start" });
+
+    // if (activeEl) {
+    //   // 1) 가장 간단: 중앙 정렬 스크롤
+    //   activeEl.scrollIntoView({ block: "center" });
+
+    //   // 2) 혹시 block:"center"가 환경에서 애매하면(대체용):
+    //   // const target = activeEl.offsetTop - (listEl.clientHeight / 2) + (activeEl.clientHeight / 2);
+    //   // listEl.scrollTop = Math.max(0, target);
+    // }
+  }
+
+  async function selectClient(name) {
+    if (!name) return;
+    setSelectedClientName(name);
+    await renderClientDetail(name);
+
+    // (4) 상세를 오른쪽 패널에 표시
+    noHint.classList.add("hidden");
+    detail.classList.remove("hidden");
+
+    updateActiveRow(name);
+
+    const activeEl = listEl.querySelector(`.client-item[data-name="${CSS.escape(name)}"]`);
+    activeEl?.scrollIntoView({ block: "start" });
+
+    // if (activeEl) {
+    //   // 1) 가장 간단: 중앙 정렬 스크롤
+    //   activeEl.scrollIntoView({ block: "center" });
+
+    //   // 2) 혹시 block:"center"가 환경에서 애매하면(대체용):
+    //   // const target = activeEl.offsetTop - (listEl.clientHeight / 2) + (activeEl.clientHeight / 2);
+    //   // listEl.scrollTop = Math.max(0, target);
+    // }
+  }
+
+  function updateActiveRow(activeName) {
+    [...listEl.querySelectorAll(".client-item")].forEach(el => {
+      el.classList.toggle("active", el.dataset.name === activeName);
     });
   }
 
@@ -88,10 +226,8 @@ async function initClientPage() {
     document.getElementById("c_weight").textContent = c.weight || "";
     document.getElementById("c_height").textContent = c.height || "";
 
-    // tests 렌더 + 클릭 이벤트
     testList.innerHTML = "";
-    const tests = c.tests || [];
-    tests.forEach(t => {
+    (c.tests || []).forEach(t => {
       const li = document.createElement("li");
       const btn = document.createElement("button");
       btn.textContent = t;
@@ -101,6 +237,8 @@ async function initClientPage() {
     });
   }
 }
+
+
 
 async function openResultWindow(name, test) {
   // backend 요청

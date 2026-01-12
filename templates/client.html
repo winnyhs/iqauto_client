@@ -2,30 +2,101 @@
 {% set active_tab = "client" %}
 {% block content %}
 
-<div class="row">
-  <button id="btnNewClient" class="btn primary">+ 새 client 등록</button>
-</div>
+<div class="client-page">
+  <!-- LEFT: list -->
+  <div class="client-left">
+    <div class="row" style="margin-top:0;">
+      <button id="btnNewClient" class="btn primary" style="width:90%;">+ 새 고객 등록</button>
+    </div>
 
-<div class="row">
-  <label class="label">기존 client 선택</label>
-  <!-- size=15 로 15명까지 한번에 보이고, 그 이상은 스크롤 -->
-  <select id="clientSelect" class="select" size="15"></select>
-</div>
-
-<div id="clientDetail" class="card hidden">
-  <div id="selectedMsg" class="blink-blue">이 고객을 진단대상자로 지정했습니다</div>
-
-  <div class="kv">
-    <div><span class="k">이름</span><span class="v" id="c_name"></span></div>
-    <div><span class="k">생년월일</span><span class="v" id="c_birth"></span></div>
-    <div><span class="k">성별</span><span class="v" id="c_sex"></span></div>
-    <div><span class="k">체중</span><span class="v" id="c_weight"></span></div>
-    <div><span class="k">키</span><span class="v" id="c_height"></span></div>
+    <div class="row">
+      <label class="label">고객 리스트</label>
+      <div id="clientList" class="client-list" role="listbox" aria-label="client list"></div>
+    </div>
   </div>
 
-  <div class="tests">
-    <div class="label">test (클릭 시 해당 날짜 결과 요청)</div>
-    <ul id="testList" class="testlist"></ul>
+  <!-- RIGHT: detail -->
+  <div class="client-right">
+    <div id="clientDetail" class="card hidden" style="margin-top:0;">
+      <div id="selectedMsg" class="blink-blue">이 고객을 진단대상자로 지정했습니다</div>
+
+      <div class="kv">
+        <div><span class="k">이름</span><span class="v" id="c_name"></span></div>
+        <div><span class="k">생년월일</span><span class="v" id="c_birth"></span></div>
+        <div><span class="k">성별</span><span class="v" id="c_sex"></span></div>
+        <div><span class="k">체중</span><span class="v" id="c_weight"></span></div>
+        <div><span class="k">키</span><span class="v" id="c_height"></span></div>
+      </div>
+
+      <div class="tests">
+        <div class="label">test (클릭 시 해당 날짜 결과 요청)</div>
+        <ul id="testList" class="testlist"></ul>
+      </div>
+    </div>
+
+    <div id="noSelectionHint" class="card muted">
+      왼쪽에서 고객을 선택하면 상세 정보가 여기에 표시됩니다.
+    </div>
+  </div>
+</div>
+
+<!-- New Client Modal -->
+<div id="newClientModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" id="newClientBackdrop"></div>
+
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="newClientTitle">
+    <div class="modal-header">
+      <div id="newClientTitle" class="modal-title">새 고객 등록</div>
+      <button type="button" class="modal-x" id="btnCloseNewClient" aria-label="닫기">×</button>
+    </div>
+
+    <form id="newClientForm" class="modal-body">
+      <div class="form-grid">
+        <label class="fg">
+          <span class="fg-label">이름 *</span>
+          <input id="m_name" class="input" type="text" required />
+        </label>
+
+        <label class="fg">
+          <span class="fg-label">생일</span>
+          <input id="m_birth_date" class="input" type="date" />
+        </label>
+
+        <label class="fg">
+          <span class="fg-label">성별</span>
+          <select id="m_sex" class="input">
+            <option value="">선택</option>
+            <option value="female">여</option>
+            <option value="male">남</option>
+          </select>
+        </label>
+
+        <label class="fg">
+          <span class="fg-label">키</span>
+          <input id="m_height" class="input" type="text" placeholder="예: 167cm" />
+        </label>
+
+        <label class="fg">
+          <span class="fg-label">몸무게</span>
+          <input id="m_weight" class="input" type="text" placeholder="예: 57kg" />
+        </label>
+
+        <label class="fg fg-full">
+          <span class="fg-label">수술 이력</span>
+          <textarea id="m_surgery_history" class="input" rows="3" placeholder="예: 2018-05 맹장수술"></textarea>
+        </label>
+
+        <label class="fg fg-full">
+          <span class="fg-label">복용 중인 약</span>
+          <textarea id="m_medications" class="input" rows="3" placeholder="예: 혈압약(아침 1회)"></textarea>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelNewClient">취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
   </div>
 </div>
 
